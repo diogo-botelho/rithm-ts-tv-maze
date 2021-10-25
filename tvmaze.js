@@ -13087,9 +13087,8 @@ var axios_1 = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 var $ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
 var $showsList = $("#showsList");
 var $episodesArea = $("#episodesArea");
+var $episodesList = $("#episodesList");
 var $searchForm = $("#searchForm");
-var $getEpisodes = $(".getEpisodes");
-console.log($getEpisodes);
 var BASE_URL = "https://api.tvmaze.com";
 var DEFAULT_IMAGE = "https://thumbs.dreamstime.com/b/no-image-available-icon-flat-vector-no-image-available-icon-flat-vector-illustration-132482953.jpg";
 /** Given a search term, search for tv shows that match that query.
@@ -13106,25 +13105,25 @@ function getShowsByTerm(term) {
                 case 0: return [4 /*yield*/, axios_1.default.get(BASE_URL + "/search/shows?q=:" + term)];
                 case 1:
                     response = _a.sent();
-                    console.log(response.data);
-                    shows = (response.data).map(function (show) {
-                        var _a = show.show, name = _a.name, id = _a.id, summary = _a.summary, image = _a.image;
-                        image = image ? image.medium : DEFAULT_IMAGE;
+                    shows = (response.data).map(function (result) {
+                        var _a = result.show, name = _a.name, id = _a.id, summary = _a.summary, image = _a.image;
+                        if (image === null) {
+                            image = { medium: DEFAULT_IMAGE };
+                        }
                         return { name: name, id: id, summary: summary, image: image };
                     });
-                    console.log("shows", shows);
                     return [2 /*return*/, shows];
             }
         });
     });
 }
-/** Given list of shows, create markup for each and to DOM */
+/** Given list of shows, create markup for each and append to DOM */
 function populateShows(shows) {
     console.log(shows);
     $showsList.empty();
     for (var _i = 0, shows_1 = shows; _i < shows_1.length; _i++) {
         var show = shows_1[_i];
-        var $show = $("<div data-show-id=\"" + show.id + "\" class=\"col-md-12 col-lg-6 mb-4\">\n         <div class=\"media\">\n           <img\n              src=\"" + show.image + "\"\n              alt=\"" + show.name + "\"\n              class=\"w-25 mr-3\">\n           <div class=\"media-body\">\n             <h5 class=\"text-primary\">" + show.name + "</h5>\n             <div><small>" + show.summary + "</small></div>\n             <button id=\"" + show.id + "\" class=\"btn btn-outline-light btn-sm Show-getEpisodes episode-button\">\n               Episodes\n             </button>\n           </div>\n         </div>\n       </div>\n      ");
+        var $show = $("<div data-show-id=\"" + show.id + "\" class=\"col-md-12 col-lg-6 mb-4 show\">\n         <div class=\"media\">\n           <img\n              src=\"" + show.image + "\"\n              alt=\"" + show.name + "\"\n              class=\"w-25 mr-3\">\n           <div class=\"media-body\">\n             <h5 class=\"text-primary\">" + show.name + "</h5>\n             <div><small>" + show.summary + "</small></div>\n             <button id=\"" + show.id + "\" class=\"btn btn-outline-light btn-sm Show-getEpisodes episode-button\">\n               Episodes\n             </button>\n           </div>\n         </div>\n       </div>\n      ");
         $showsList.append($show);
     }
 }
@@ -13162,68 +13161,61 @@ $searchForm.on("submit", function (evt) {
         });
     });
 });
-/** Given a show ID, get from API and return (promise) array of episodes:
- *      { id, name, season, number }
+/** Given a show ID, get from API and return a promise when resolved provides an array of episodes:
+ *  [{ id, name, season, number },...]
  */
 function getEpisodesOfShow(id) {
     return __awaiter(this, void 0, void 0, function () {
         var response, episodes;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    console.log("in api function:", { id: id });
-                    console.log(BASE_URL + "/shows/" + id + "/episodes");
-                    return [4 /*yield*/, axios_1.default.get(BASE_URL + "/shows/" + id + "/episodes")];
+                case 0: return [4 /*yield*/, axios_1.default.get(BASE_URL + "/shows/" + id + "/episodes")];
                 case 1:
                     response = _a.sent();
-                    console.log(response.data);
                     episodes = (response.data).map(function (episode) {
                         var id = episode.id, name = episode.name, season = episode.season, number = episode.number;
                         return { id: id, name: name, season: season, number: number };
                     });
-                    console.log("shows", episodes);
                     return [2 /*return*/, episodes];
             }
         });
     });
 }
-/** Write a clear docstring for this function... */
-// function populateEpisodes(episodes) { }
+/** Takes in an array of episodes and appends to DOM */
 function populateEpisodes(episodes) {
     console.log(episodes);
-    $episodesArea.empty();
+    $episodesList.empty();
     for (var _i = 0, episodes_1 = episodes; _i < episodes_1.length; _i++) {
         var episode = episodes_1[_i];
         var $episode = $("<li id=\"" + episode.id + "\">" + episode.name + " (season " + episode.season + ", number " + episode.number + ")\n       </li>.");
-        $episodesArea.append("" + $episode);
+        $episodesList.append($episode);
     }
     $episodesArea.show();
 }
+/** Handles episode button click.
+ *
+ * Takes in click event, gets episodes for show and appends to DOM
+*/
 function handleEpisodesClick(evt) {
     return __awaiter(this, void 0, void 0, function () {
         var id, episodes;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    id = $(evt.target).closest("Show").attr("data-show-id");
-                    console.log("before api call:", id);
+                    id = $(evt.target).closest(".show").attr("data-show-id");
+                    if (id === undefined) {
+                        return [2 /*return*/];
+                    }
                     return [4 /*yield*/, getEpisodesOfShow(id)];
                 case 1:
                     episodes = _a.sent();
-                    console.log("afer api call:", { episodes: episodes });
                     populateEpisodes(episodes);
                     return [2 /*return*/];
             }
         });
     });
 }
-//
 $showsList.on("click", ".episode-button", handleEpisodesClick);
-//  {
-//   console.log(evt.target);
-//   const id = evt.target.id;
-//   await handleClickAndDisplayEpisodes(id);
-// });
 
 
 /***/ })
