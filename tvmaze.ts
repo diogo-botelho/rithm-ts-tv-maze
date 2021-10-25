@@ -46,7 +46,7 @@ async function getShowsByTerm(term: string): Promise<ShowInterface[]> {
 
 /** Given list of shows, create markup for each and append to DOM */
 
-function populateShows(shows: ShowInterface[]) {
+function populateShows(shows: ShowInterface[]): void {
   console.log(shows);
   $showsList.empty();
 
@@ -100,7 +100,7 @@ async function getEpisodesOfShow(id: string): Promise<EpisodeInterface[]> {
   const response = await axios.get(`${BASE_URL}/shows/${id}/episodes`);
 
   const episodes: EpisodeInterface[] = (response.data).map(
-    (episode: EpisodeInterface): EpisodeInterface => {
+    (episode: EpisodeInterface) => {
       const { id, name, season, number } = episode
       return { id, name, season, number }
     });
@@ -112,7 +112,7 @@ async function getEpisodesOfShow(id: string): Promise<EpisodeInterface[]> {
 /** Takes in an array of episodes and appends to DOM */
 
 function populateEpisodes(episodes: EpisodeInterface[]) {
-  console.log(episodes);
+  // console.log(episodes);
   $episodesList.empty();
 
   for (let episode of episodes) {
